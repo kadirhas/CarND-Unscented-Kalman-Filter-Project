@@ -13,7 +13,7 @@ using std::vector;
 */
 UKF::UKF() {
   // if this is false, laser measurements will be ignored (except during init)
-  use_laser_ = false;
+  use_laser_ = true;
   
   // if this is false, radar measurements will be ignored (except during init)
   use_radar_ = true;
@@ -88,6 +88,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   //if radar else lidar thing must be done here
   cout << "get here twice " << endl;
   if (!is_initialized_) {
+cout << "initializing" << endl;
     // first measurement
     if ((meas_package.sensor_type_ == MeasurementPackage::RADAR)) {
       /**
@@ -101,6 +102,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       
       // done initializing, no need to predict or update
       is_initialized_ = true;
+cout << "initialized with radar" << endl;
     }
     else if ((meas_package.sensor_type_ == MeasurementPackage::LASER)) {
       /**
@@ -111,14 +113,16 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       
       // done initializing, no need to predict or update
       is_initialized_ = true;
+cout << "initialized with lidar" << endl;
     }
-    
+    cout << "initialized values: " << x_ << endl;
     return;
   }
   
   cout << "prediction is coming" << endl;
   double dt = (meas_package.timestamp_ - time_us_)/ 1000000.0;; //dt - expressed in seconds
   time_us_ = meas_package.timestamp_;
+cout << "calculating dt: " << dt << endl;
   Prediction(dt);
   cout << "naber, olcumler gelecek" << endl;
   if ((meas_package.sensor_type_ == MeasurementPackage::RADAR) && use_radar_) {
@@ -127,6 +131,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   }
   else if ((meas_package.sensor_type_ == MeasurementPackage::LASER) && use_laser_) {
     UpdateLidar(meas_package);
+cout << "lidardan haber var" << endl;
   }
   
   
@@ -153,6 +158,7 @@ void UKF::Prediction(double delta_t) {
   x_aug.head(5) = x_;
   x_aug(5) = 0;//std_a;
   x_aug(6) = 0;//std_yawdd;
+  Xsig_aug.fill(0);
   Xsig_aug.col(0) = x_aug;
   
   P_aug.topLeftCorner(5,5) = P_;
@@ -160,9 +166,11 @@ void UKF::Prediction(double delta_t) {
   P_aug(6,6) = std_yawdd_*std_yawdd_;
   
   MatrixXd a1;
+  cout << "paug: " << P_aug << endl;
   a1=(lambda_ + n_aug_)*P_aug;
   a1 = a1.llt().matrixL();
-  
+  cout << "a1: " << a1 << endl;
+  cout << "beginning" << endl;
   for (int i = 0; i<7; i++)
   {
     Xsig_aug.col(1+i) = x_aug+a1.col(i);
@@ -170,6 +178,8 @@ void UKF::Prediction(double delta_t) {
   }
   
   //predict sigma points
+  cout << "sigma" << endl;
+  cout << "xsigaug: " << endl << Xsig_aug << endl;
   for (int i = 0; i < Xsig_aug.cols(); i++)
   {
     VectorXd xtemp = VectorXd(5);
@@ -205,7 +215,7 @@ void UKF::Prediction(double delta_t) {
   }
   //predict mean and covariance
   
-  
+    cout << "state mean" << endl;
   //predict state mean
   x_.fill(0);
   for(int i = 0; i<(n_aug_size_); i++)
@@ -214,15 +224,19 @@ void UKF::Prediction(double delta_t) {
     
   }
   P_.fill(0);
+  cout << "covariance" << endl;
   //predict state covariance matrix
   for(int i = 0; i<(n_aug_size_); i++)
   {
     VectorXd x_diff = Xsig_pred_.col(i) - x_;
+    cout << "counting: " << i << endl;
     //normalize angles
-    while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
+    
+    while (x_diff(3)> M_PI)x_diff(3)-=2.*M_PI;
     while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
     P_ +=  weights_(i) * x_diff * x_diff.transpose() ; 
   }
+  cout << "end" << endl;
   
 }
 
@@ -245,7 +259,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   z_pred.fill(0.0);
   
   MatrixXd Zsig = MatrixXd(n_z, n_aug_size_);
-  Zsig = Xsig_pred.topRows(n_z); //check its size?
+  Zsig = Xsig_pred_.topRows(n_z); //check its size?
   
   for (int i = 0 ; i<n_aug_size_; i++ )
   {
