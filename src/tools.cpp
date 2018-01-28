@@ -15,4 +15,37 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
   TODO:
     * Calculate the RMSE here.
   */
+  VectorXd rmse(5);
+  rmse << 0,0,0,0,0;
+  
+  // normalize the angle here
+
+  if(estimations.size() != ground_truth.size()
+      || estimations.size() == 0){
+    cout << "Invalid estimation or ground_truth data" << endl;
+    return rmse;
+      }
+  //accumulate squared residuals
+  for(int i=0; i < estimations.size(); ++i){
+        // ... your code here
+        
+        // solves the angle problem
+        while (x_diff(3)> M_PI) estimations[i](3)-=2.*M_PI; 
+        while (x_diff(3)<-M_PI) estimations[i](3)+=2.*M_PI;
+        VectorXd errors = estimations[i]-ground_truth[i];
+        
+        errors = errors.array()*errors.array();
+        rmse += errors;
+    
+  }
+
+  //calculate the mean
+  // ... your code here
+  rmse = rmse.array()/estimations.size();
+
+  //calculate the squared root
+  // ... your code here
+    rmse = rmse.array().sqrt();
+  //return the result
+  return rmse;
 }
