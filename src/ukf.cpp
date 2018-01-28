@@ -66,7 +66,7 @@ UKF::UKF() {
   weights_(0) = lambda_/(lambda_+n_aug_);
   for (int i = 1; i<(n_aug_size_); i++)
   {
-    weights_(i) = 1/(2*(lambda_+n_aug_));
+    weights_(i) = 0.5/(lambda_+n_aug_);
   }
   is_initialized_ = false;
 }
@@ -88,7 +88,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   //if radar else lidar thing must be done here
   cout << "get here twice " << endl;
   if (!is_initialized_) {
-cout << "initializing" << endl;
+    cout << "initializing" << endl;
     // first measurement
     if ((meas_package.sensor_type_ == MeasurementPackage::RADAR)) {
       /**
@@ -102,7 +102,7 @@ cout << "initializing" << endl;
       
       // done initializing, no need to predict or update
       is_initialized_ = true;
-cout << "initialized with radar" << endl;
+      cout << "initialized with radar" << endl;
     }
     else if ((meas_package.sensor_type_ == MeasurementPackage::LASER)) {
       /**
@@ -113,7 +113,7 @@ cout << "initialized with radar" << endl;
       
       // done initializing, no need to predict or update
       is_initialized_ = true;
-cout << "initialized with lidar" << endl;
+      cout << "initialized with lidar" << endl;
     }
     cout << "initialized values: " << x_ << endl;
     return;
@@ -122,7 +122,7 @@ cout << "initialized with lidar" << endl;
   cout << "prediction is coming" << endl;
   double dt = (meas_package.timestamp_ - time_us_)/ 1000000.0;; //dt - expressed in seconds
   time_us_ = meas_package.timestamp_;
-cout << "calculating dt: " << dt << endl;
+  cout << "calculating dt: " << dt << endl;
   Prediction(dt);
   cout << "naber, olcumler gelecek" << endl;
   if ((meas_package.sensor_type_ == MeasurementPackage::RADAR) && use_radar_) {
@@ -131,7 +131,7 @@ cout << "calculating dt: " << dt << endl;
   }
   else if ((meas_package.sensor_type_ == MeasurementPackage::LASER) && use_laser_) {
     UpdateLidar(meas_package);
-cout << "lidardan haber var" << endl;
+    cout << "lidardan haber var" << endl;
   }
   
   
@@ -161,17 +161,20 @@ void UKF::Prediction(double delta_t) {
   Xsig_aug.fill(0);
   Xsig_aug.col(0) = x_aug;
   
+  p_aug.fill(0);
   P_aug.topLeftCorner(5,5) = P_;
   P_aug(5,5) = std_a_*std_a_;
   P_aug(6,6) = std_yawdd_*std_yawdd_;
   
   MatrixXd a1;
   cout << "paug: " << P_aug << endl;
+  
+  //note: this might be the issue, lambda_+n_aug_ might need to be squared outside
   a1=(lambda_ + n_aug_)*P_aug;
   a1 = a1.llt().matrixL();
   cout << "a1: " << a1 << endl;
   cout << "beginning" << endl;
-  for (int i = 0; i<7; i++)
+  for (int i = 0; i<n_aug_; i++)
   {
     Xsig_aug.col(1+i) = x_aug+a1.col(i);
     Xsig_aug.col(1+i+n_aug_) = x_aug-a1.col(i);
@@ -215,7 +218,7 @@ void UKF::Prediction(double delta_t) {
   }
   //predict mean and covariance
   
-    cout << "state mean" << endl;
+  cout << "state mean" << endl;
   //predict state mean
   x_.fill(0);
   for(int i = 0; i<(n_aug_size_); i++)
@@ -254,7 +257,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
     You'll also need to calculate the lidar NIS.
   */
   
-    int n_z = meas_package.raw_measurements_.size();
+  int n_z = meas_package.raw_measurements_.size();
   VectorXd z_pred = VectorXd(n_z);
   z_pred.fill(0.0);
   
