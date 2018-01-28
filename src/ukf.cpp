@@ -161,7 +161,7 @@ void UKF::Prediction(double delta_t) {
   Xsig_aug.fill(0);
   Xsig_aug.col(0) = x_aug;
   
-  p_aug.fill(0);
+  P_aug.fill(0);
   P_aug.topLeftCorner(5,5) = P_;
   P_aug(5,5) = std_a_*std_a_;
   P_aug(6,6) = std_yawdd_*std_yawdd_;
