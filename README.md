@@ -5,9 +5,9 @@ In this project, a simulated radar and lidar data is fused using an Unscented Ka
 
 [//]: # (Image References)
 
-[image1]: ./Docs/close_data1.png "Dataset 1 results"
-[image2]: ./Docs/data1_all.png "Complete path of Dataset 1"
-[image3]: ./Docs/data2_all.png "Complete path of Dataset 2"
+[image1]: ./docs/close_data1.png "Dataset 1 results"
+[image2]: ./docs/data1_all.png "Complete path of Dataset 1"
+[image3]: ./docs/data2_all.png "Complete path of Dataset 2"
 
 ## Building the project
 The main program can be built and run by doing the following from the project top directory.
