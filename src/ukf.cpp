@@ -55,9 +55,10 @@ UKF::UKF() {
     Hint: one or more values initialized above might be wildly off...
   */
   n_x_ = 5;
-  lambda_ = 3 - n_aug_;
   n_aug_ = 7;
   n_aug_size_ = 2*n_aug_+1;
+  lambda_ = 3 - n_aug_;
+
   weights_ = VectorXd(2 * n_aug_ + 1);
   Xsig_pred_ = MatrixXd(n_x_, n_aug_size_);
   P_ = MatrixXd::Identity(n_x_,n_x_);
